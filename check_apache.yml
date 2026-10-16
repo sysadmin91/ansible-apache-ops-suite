@@ -1,0 +1,14 @@
+---
+- name: Check Apache Status
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Check service httpd
+      systemd:
+        name: apache2
+      register: apache_status
+
+    - name: Output
+      debug:
+        msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"
