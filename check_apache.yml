@@ -7,12 +7,13 @@
     distrib_vers: "{{ ansible_facts['distribution_version'] }}"
     ip: "{{ ansible_facts['all_ipv4_addresses'] }}"
   tasks:
-#Sistema Operativo
+
+#Visualizzazione Sistema Operativo
     - name: Nome SO
       debug:
         msg: "SO: {{ distrib }}"
 
-#Versione Sistema Operativo
+#Visualizzazione Versione Sistema Operativo
     - name: Versione SO
       debug:
         msg: "Versione {{ distrib }}: {{ distrib_vers }}"
@@ -21,13 +22,34 @@
     - name: Indirizzo IP
       debug:
         msg: "IP: {{ ip }}"
-        
+
+#Ricerca pacchetti installati e visualizzazione tipo di webserver
+    - name: Raccolta pacchetti installati
+        ansible.builtin.package_facts:
+          manager: "auto"
+    
+    - name: Visualizzazione  Webserver
+      debug:
+        msg: "Webserver: Apache"
+      when: "'apache2' in ansible_facts.packages or 'httpd' in ansible_facts.packages"
+
+
+    - name: Versione Webserver
+      command: apache2 -v
+      register: apache_version
+  
+    - name: Visualizzazione Versione Webserver
+      debug:
+        msg: "Versione WebServer: {{ apache_version.stdout | regex_search('Apache/([0-9.]+)', '\\1')}}"
+
 #Verifica stato del servizio Apache 
     - name: Check service httpd
       systemd:
         name: apache2
       register: apache_status
+      
 #Visualizzazione stato del servizio Apache
     - name: Output
       debug:
-        msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"        
+        msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"
+  
