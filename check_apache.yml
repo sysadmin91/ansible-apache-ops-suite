@@ -2,13 +2,32 @@
 - name: Check Apache Status
   hosts: webservers
   become: yes
-
+  vars:
+    distrib: "{{ ansible_facts['distribution'] }}"
+    distrib_vers: "{{ ansible_facts['distribution_version'] }}"
+    ip: "{{ ansible_facts['all_ipv4_addresses'] }}"
   tasks:
+#Sistema Operativo
+    - name: Nome SO
+      debug:
+        msg: "SO: {{ distrib }}"
+
+#Versione Sistema Operativo
+    - name: Versione SO
+      debug:
+        msg: "Versione {{ distrib }}: {{ distrib_vers }}"
+
+#Visualizzazione IP del server remoto
+    - name: Indirizzo IP
+      debug:
+        msg: "IP: {{ ip }}"
+        
+#Verifica stato del servizio Apache 
     - name: Check service httpd
       systemd:
         name: apache2
       register: apache_status
-
+#Visualizzazione stato del servizio Apache
     - name: Output
       debug:
-        msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"
+        msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"        
