@@ -5,7 +5,7 @@
   vars:
     distrib: "{{ ansible_facts['distribution'] }}"
     distrib_vers: "{{ ansible_facts['distribution_version'] }}"
-    ip: "{{ ansible_facts['all_ipv4_addresses'] }}"
+    ip: "{{ ansible_facts['all_ipv4_addresses'][0] }}"
   tasks:
 
 #Visualizzazione Sistema Operativo
@@ -42,14 +42,37 @@
       debug:
         msg: "Versione WebServer: {{ apache_version.stdout | regex_search('Apache/([0-9.]+)', '\\1')}}"
 
+#Verifica del configurazione di Apache
+    - name: Verifica Configurazione di Apache
+      command: apachectl configtest
+      changed_when: false
+      register: apache_checkconfig
+
+    - name: Validazione configurazione Apache
+      debug:
+        msg: "La configurazione di Apache è corretta."
+      when: apache_checkconfig.rc == 0
+
 #Verifica stato del servizio Apache 
-    - name: Check service httpd
+    - name: Verifica servizio Apache
       systemd:
         name: apache2
       register: apache_status
       
 #Visualizzazione stato del servizio Apache
-    - name: Output
+    - name: Visualizzazione stato servizio Apache
       debug:
         msg: "Il servizio di Apache è: {{ apache_status.status.ActiveState }}"
+
+#Verifica dello stato del sito web
+    - name: Verifica Risposta HTTP sito web 
+      ansible.builtin.uri:
+        url: "http://{{ ip }}"
+        status_code: 200
+        method: GET
+      register: web_check
+
+    - name: Visualizzazione risposta sito web
+      debug:
+        msg: "La risposta del sito web è: {{ web_check.status }}"
   
